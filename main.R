@@ -171,6 +171,35 @@ ROC_2_test=roc(df$GENRE[train==FALSE],pred)
 lines(ROC_2_test, xlab="", col=3,main="Superposition courbes ROC")
 
 legend(0.6,0.2,legend=c(paste("ModT :",toString(auc(ROC_T_test))),paste("Mod1 :",toString(auc(ROC_1_test))),paste("Mod2 :",toString(auc(ROC_2_test)))), col=c(1:3),lty=1)
+
+
+################
+### Q4
+################
+erreur=function(theoric,prediction)
+{
+  return(sum(theoric-prediction)^2)
+}
+##ModT
+#Apprentissage
+erreur(df$GENRE[train=TRUE],predict(ModT))
+#Test
+
+##Mod1
+#Apprentissage
+
+#Test
+
+##Mod2
+#Apprentissage
+
+#Test
+
+##ModAIC
+#Apprentissage
+
+#Test
+
 ##########################################################################################################################################
 ##########################################################################################################################################
 ##########################################################Partie II#######################################################################
@@ -190,5 +219,20 @@ x = as.matrix(df[,-ncol(df)])
 y = as.numeric(factor(df$GENRE))-1
 ridge.fit = glmnet(x,y,alpha=0,lambda=grid)
 
+plot(ridge.fit)
+
+################
+### Q3
+################
 
 
+set.seed(314)
+CV=cv.glmnet(x,y,lambda=10^seq(10,-2,length=100))
+lambda=CV$lambda.min #0.01
+
+y.test = y[train=FALSE]
+Mod=glmnet(x[train=TRUE],y[train=TRUE],alpha=0,lambda=lambda)
+
+#Calcul de l'erreur de prédiction
+ridge.pred = predict(ridge.fit,s=lambda,newx=x[train=FALSE,])    
+mean((ridge.pred-y.test)^2) 
