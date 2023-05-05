@@ -105,10 +105,16 @@ ModT<-model(formuleT,data=df[train==TRUE,])
 ####Récupérations des variables significatives
 library(stats)
 ind_variables_nonsign=which(summary(ModT)$coefficients[,4]>=0.05)
+names(df)[ind_variables_nonsign]
 
 ####Mis à jour du modèle en supprimant les variables significatives
-formule_maj<-as.formula(paste("GENRE~.",paste(as.character(names(df)[-ind_variables_nonsign]), collapse="+")))
-Mod1=model(formule_maj,data=df[train==TRUE,])
+formule1<-GENRE~.-PAR_TC-PAR_SC-PAR_SC_V-PAR_ASE1-PAR_ASS_V-PAR_SFMV2-PAR_SFMV3-PAR_SFMV4-PAR_SFMV5-PAR_SFMV6-PAR_SFMV7-PAR_SFMV8-PAR_SFMV9-PAR_SFMV10-
+  PAR_SFMV11-PAR_SFMV12-PAR_SFMV13-PAR_SFMV14-PAR_SFMV15-PAR_SFMV16-PAR_SFMV17-PAR_SFMV18-PAR_SFMV19-PAR_SFMV20-PAR_SFMV21-PAR_SFMV22-PAR_SFMV23-PAR_SFMV24-
+  PAR_SFM_MV-PAR_MFCC1-PAR_MFCC2-PAR_MFCC3-PAR_MFCC6-PAR_MFCC7-PAR_MFCC8-PAR_MFCC12-PAR_MFCC14-PAR_MFCC15-PAR_MFCC16-PAR_MFCC17-PAR_MFCC18-PAR_THR_3RMS_TOT-
+  PAR_THR_1RMS_10FR_MEAN-PAR_THR_1RMS_10FR_VAR-PAR_THR_2RMS_10FR_MEAN-PAR_PEAK_RMS_TOT-PAR_PEAK_RMS10FR_MEAN-PAR_PEAK_RMS10FR_VAR-PAR_1RMS_TCD-PAR_2RMS_TCD-
+  PAR_3RMS_TCD-PAR_ZCD_10FR_MEAN-PAR_ZCD_10FR_VAR-PAR_1RMS_TCD_10FR_MEAN-PAR_1RMS_TCD_10FR_VAR-PAR_2RMS_TCD_10FR_MEAN-PAR_2RMS_TCD_10FR_VAR-PAR_3RMS_TCD_10FR_MEAN-
+  PAR_3RMS_TCD_10FR_VAR
+Mod1=model(formule1,data=df[train==TRUE,])
 
 ####Modele2####
 ###############
@@ -118,23 +124,53 @@ ind_variables_nonsign=which(summary(ModT)$coefficients[,4]>=0.2)
 nom_variables_nonsign=names(df)[ind_variables_nonsign]
 
 ####Mis à jour du modèle en supprimant les variables significatives
-formule_maj<-as.formula(paste("GENRE~.",paste(names(df)[-ind_variables_nonsign], collapse="+")))
-Mod2=model(formule_maj,data=df[train==TRUE,])
+formule2<-GENRE~.-PAR_SC-PAR_SC_V-PAR_ASE1-PAR_ASS_V-PAR_SFMV2-PAR_SFMV3-PAR_SFMV4-PAR_SFMV5-PAR_SFMV6-PAR_SFMV7-PAR_SFMV8-PAR_SFMV9-PAR_SFMV10-
+  PAR_SFMV11-PAR_SFMV12-PAR_SFMV13-PAR_SFMV14-PAR_SFMV15-PAR_SFMV16-PAR_SFMV17-PAR_SFMV18-PAR_SFMV19-PAR_SFMV20-PAR_SFMV21-PAR_SFMV22-PAR_SFMV23-PAR_SFMV24-
+  PAR_SFM_MV-PAR_MFCC1-PAR_MFCC6-PAR_MFCC8-PAR_MFCC15-PAR_MFCC16-PAR_MFCC17-
+  PAR_THR_1RMS_10FR_MEAN-PAR_THR_2RMS_10FR_MEAN-PAR_PEAK_RMS_TOT-PAR_PEAK_RMS10FR_VAR-PAR_1RMS_TCD-
+  PAR_ZCD_10FR_MEAN-PAR_ZCD_10FR_VAR-PAR_1RMS_TCD_10FR_MEAN-PAR_2RMS_TCD_10FR_MEAN-PAR_3RMS_TCD_10FR_MEAN-
+  PAR_3RMS_TCD_10FR_VAR
+Mod2=model(formule2,data=df[train==TRUE,])
+
+####ModAIC####
+###############
+library(MASS)
+#ModAIC=stepAIC(ModT,scope=list(upper=GENRE~.,lower=GENRE~1))
 
 ################
 ### Q4
 ################
 library(ROCR)
+library(pROC)
 
+####Premier graph
+#Echantillon apprentissage
 pred=predict(ModT)
-predictions_T_train=prediction(pred,df$GENRE[train==TRUE])
-ROC_T_train = performance(predictions_T_train,"sens","fpr")  # prépare les infos pour la courbe ROC
+ROC_T_train=roc(df$GENRE[train==TRUE],pred)
 plot(ROC_T_train, xlab="", col="blue",main="courbes ROC")
 
+#Echantillon test
 pred=predict(ModT,newdata=df[train==FALSE,])
-predictions_T_test=prediction(pred,df$GENRE[train==FALSE])
-ROC_T_test = performance(predictions_T_test,"sens","fpr")  # prépare les infos pour la courbe ROC
-plot(ROC_T_test, xlab="", col="red",main="courbes ROC")
+ROC_T_test=roc(df$GENRE[train==FALSE],pred)
+lines(ROC_T_test, xlab="", col="red",main="courbes ROC")
+
+legend(0.4,0.2,legend=c("Apprentissage","Test"),col=c("blue","red"),lty=1)
+#Règle parfaite
+#lines(0:length(ROC_T_test)/1:length(ROC_T_test)) à voir comment faire
+
+pred=predict(ModT,newdata=df[train==FALSE,])
+ROC_T_test=roc(df$GENRE[train==FALSE],pred)
+plot(ROC_T_test, xlab="", col=1,main="Superposition courbes ROC")
+
+pred=predict(Mod1,newdata=df[train==FALSE,])
+ROC_1_test=roc(df$GENRE[train==FALSE],pred)
+lines(ROC_1_test, xlab="", col=2,main="Superposition courbes ROC")
+
+pred=predict(Mod2,newdata=df[train==FALSE,])
+ROC_2_test=roc(df$GENRE[train==FALSE],pred)
+lines(ROC_2_test, xlab="", col=3,main="Superposition courbes ROC")
+
+legend(0.6,0.2,legend=c(paste("ModT :",toString(auc(ROC_T_test))),paste("Mod1 :",toString(auc(ROC_1_test))),paste("Mod2 :",toString(auc(ROC_2_test)))), col=c(1:3),lty=1)
 ##########################################################################################################################################
 ##########################################################################################################################################
 ##########################################################Partie II#######################################################################
