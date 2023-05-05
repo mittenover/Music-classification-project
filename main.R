@@ -215,7 +215,7 @@ erreur(df$GENRE[train=TRUE],predict(ModT))
 library(glmnet)
 df=read.table("Music_2023.txt",dec='.',header=TRUE,sep=';')
 grid = 10^seq(10,-2,length=100)
-x = as.matrix(df[,-ncol(df)])
+x = as.matrix(df[,-192])
 y = as.numeric(factor(df$GENRE))-1
 ridge.fit = glmnet(x,y,alpha=0,lambda=grid)
 
@@ -227,12 +227,29 @@ plot(ridge.fit)
 
 
 set.seed(314)
-CV=cv.glmnet(x,y,lambda=10^seq(10,-2,length=100))
+CV=cv.glmnet(x,y)
 lambda=CV$lambda.min #0.01
 
-y.test = y[train=FALSE]
-Mod=glmnet(x[train=TRUE],y[train=TRUE],alpha=0,lambda=lambda)
+y.test = y[train==FALSE]
+Mod=glmnet(x[train==TRUE,],y[train==TRUE],alpha=0,lambda=grid)
 
 #Calcul de l'erreur de prédiction
-ridge.pred = predict(ridge.fit,s=lambda,newx=x[train=FALSE,])    
-mean((ridge.pred-y.test)^2) 
+ridge.pred = predict(Mod,s=lambda,newx=x[train==FALSE,])    
+mean((ridge.pred-y.test)^2)   #0.09891405
+
+
+################
+### Q4
+################
+
+
+set.seed(4658)
+CV=cv.glmnet(x,y)
+lambda=CV$lambda.min #0.01
+
+y.test = y[train==FALSE]
+Mod=glmnet(x[train==TRUE,],y[train==TRUE],alpha=0,lambda=grid)
+
+#Calcul de l'erreur de prédiction
+ridge.pred = predict(Mod,s=lambda,newx=x[train==FALSE,])    
+mean((ridge.pred-y.test)^2)   #0.09891405
