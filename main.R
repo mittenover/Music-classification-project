@@ -27,17 +27,13 @@ df=read.table("Music_2023.txt",dec='.',header=TRUE,sep=';')
 ################
 ### Q1
 ################
-
+df$GENRE=as.numeric(factor(df$GENRE))-1
 ####Analyse univarié
 summary(df)  #Toutes les variables sauf la dernière sont numériques
 str(df)
 
 
 ####Analyse bivariée (à voir)
-#ggpairs(df[,-192],ggplot2::aes(colour=df$GENRE))
-
-#pairs(X[,-192])   #On enlève la première colonne pour l'analyse
-#corrplot(cor(X[,-192]))
 
 
 ####Proportion de chacun des genres
@@ -45,11 +41,18 @@ p_classique=sum(df$GENRE=="Classical")/length(df$GENRE)  #0.53
 p_jazz=sum(df$GENRE=="Jazz")/length(df$GENRE)            #0.47
 
 ####PAR_SC_V, PAR_ASC_V
+myplot = function(x,Y,xlab=""){
+  plot(x,Y,xlab=xlab, col=Y+1,pch=Y+1);
+  boxplot(x~Y,xlab=xlab,horizontal=TRUE)
+}
+par(mfcol=c(2,1))
 summary(df$PAR_SC_V)
 mean(df$PAR_SC_V)      #105222.8
+myplot(log(df$PAR_SC_V),df$GENRE)
 
 summary(df$PAR_ASC_V)
 mean(df$PAR_ASC_V)     #0.4251288
+myplot(log(df$PAR_ASC_V),df$GENRE)
 #Le passage au log peut-être judicieux pour normaliser les valeurs
 df$PAR_SC_V=log(df$PAR_SC_V)
 df$PAR_ASC_V=log(df$PAR_ASC_V)
@@ -59,16 +62,24 @@ df=cbind(df[1:147],df[168:192])
 
 
 ####Variable très corrélées 
-C=cor(df[,-172])
+C=cor(df[,-172])-diag(1,171)
+cbind(which(C>0.99)%/%171 +1, which(C>0.99)%%171) 
+c(C[36,37],C[71,72],C[160,164])
+#0.9997459 0.9981005 0.9950279
 
-#Récupération des variables à supprimer(>.99)
-highly_cor=findCorrelation(C,cutoff=0.99)
-
-#Ajout d'un code poursupprimer la bonne variable dans le couple ? 
 
 #Suppression des variables
-df=df[,-highly_cor]
+df=df[,-c(37,72,160)]
 
+####Cas des variables mntionnées
+
+par(mfcol=c(2,1))
+myplot(df$PAR_ASE_M,df$GENRE) #Idem
+myplot(df$PAR_ASE_MV,df$GENRE) #Pas de relation importante
+myplot(df$PAR_SFM_M,df$GENRE)
+myplot(df$PAR_SFM_MV,df$GENRE) #Ne semble pas avoir une relation importante avec le genre
+
+dev.off()
 ####Définition du modèle logistique
 
 model = function(formule,data)
@@ -88,7 +99,7 @@ train=sample(c(TRUE,FALSE),n,rep=TRUE,prob=c(2/3,1/3))
 ### Q3
 ################
 
-df$GENRE=as.numeric(factor(df$GENRE))-1
+
 ####Modele0####
 ###############
 formule0<-GENRE~PAR_TC + PAR_SC + PAR_SC_V + PAR_ASE_M + PAR_ASE_MV + PAR_SFM_M + PAR_SFM_MV
@@ -176,29 +187,34 @@ legend(0.6,0.2,legend=c(paste("ModT :",toString(auc(ROC_T_test))),paste("Mod1 :"
 ################
 ### Q4
 ################
-erreur=function(theoric,prediction)
+error_classif=function(data,modele,seuil=0.5)
 {
-  return(sum(theoric-prediction)^2)
+  predproba = predict(modele,type="response",newdata=data)
+  glm.pred = ifelse(predproba>seuil,1,0)
+  return(1-mean(glm.pred==data$GENRE))
 }
 ##ModT
 #Apprentissage
-erreur(df$GENRE[train=TRUE],predict(ModT))
+error_classif(df[train==TRUE,],ModT,0.5) #0.06849315
 #Test
-
+error_classif(df[train==FALSE,],ModT,0.5) #0.09154437
 ##Mod1
 #Apprentissage
-
+error_classif(df[train==TRUE,],Mod1,0.5) #0.913242
 #Test
-
+error_classif(df[train==FALSE,],Mod1,0.5) #0.1104123
 ##Mod2
 #Apprentissage
-
+error_classif(df[train==TRUE,],Mod2,0.5) #0.08851423
 #Test
+error_classif(df[train==FALSE,],Mod2,0.5) #0.1062194
 
 ##ModAIC
 #Apprentissage
 
 #Test
+
+
 
 ##########################################################################################################################################
 ##########################################################################################################################################
@@ -227,7 +243,9 @@ plot(ridge.fit)
 
 
 set.seed(314)
-CV=cv.glmnet(x,y)
+n=nrow(df)
+train=sample(c(TRUE,FALSE),n,rep=TRUE,prob=c(2/3,1/3))
+CV=cv.glmnet(x,y,alpha=0,lambda=grid,nfolds=10)
 lambda=CV$lambda.min #0.01
 
 y.test = y[train==FALSE]
@@ -235,7 +253,9 @@ Mod=glmnet(x[train==TRUE,],y[train==TRUE],alpha=0,lambda=grid)
 
 #Calcul de l'erreur de prédiction
 ridge.pred = predict(Mod,s=lambda,newx=x[train==FALSE,])    
-mean((ridge.pred-y.test)^2)   #0.09891405
+glm.pred = ifelse(ridge.pred>0.5,1,0)
+mean(glm.pred!=y.test)   #0.09652236
+mean((glm.pred-y.test)^2) #0.09652236
 
 
 ################
@@ -244,12 +264,82 @@ mean((ridge.pred-y.test)^2)   #0.09891405
 
 
 set.seed(4658)
-CV=cv.glmnet(x,y)
+CV=cv.glmnet(x,y,alpha=0,lambda=grid,nfolds=10)
 lambda=CV$lambda.min #0.01
 
-y.test = y[train==FALSE]
-Mod=glmnet(x[train==TRUE,],y[train==TRUE],alpha=0,lambda=grid)
+Mod=glmnet(x[train==TRUE,],y[train==TRUE],alpha=0,lambda=lambda)
 
 #Calcul de l'erreur de prédiction
-ridge.pred = predict(Mod,s=lambda,newx=x[train==FALSE,])    
-mean((ridge.pred-y.test)^2)   #0.09891405
+ridge.pred = predict(Mod,s=lambda,newx=x[train==FALSE,])   
+glm.pred = ifelse(ridge.pred>0.5,1,0)
+mean(glm.pred!=y.test)   #0.0979418
+mean((glm.pred-y.test)^2) #0.0979418
+
+
+
+##########################################################################################################################################
+##########################################################################################################################################
+##########################################################Partie III#######################################################################
+##########################################################################################################################################
+##########################################################################################################################################
+################
+### Q1
+################
+library(MASS)
+library(class)
+#Mise en forme données
+df=read.table("Music_2023.txt",dec='.',header=TRUE,sep=';')
+x=df[,-192]
+xtrain=x[train==TRUE,]
+xtest=x[train==FALSE,]
+y=as.factor(df[,192])
+ytrain=y[train==TRUE]
+ytest=y[train==FALSE]
+
+#k=1
+modk1_train=knn(train=xtrain,test=xtrain,cl=ytrain,k=1)
+err1_train=mean(modk1_train!=ytrain) #0
+
+modk1_test=knn(train=xtrain,test=xtest,cl=ytrain,k=1)
+err1_test=mean(modk1_test!=ytest) #0.3654787
+
+#Choix du bon k
+library(doParallel)
+K=1:4277
+nK=length(K)
+
+ErrTrain=rep(NA,length=nK)
+ErrTest=rep(NA,length=nK)
+cl<-makePSOCKcluster(detectCores()-1)
+registerDoParallel(cl)
+for(i in 1:nK)
+{
+  k=K[i]
+  
+  modtrain=knn(xtrain,xtrain,k=k,cl=ytrain)
+  ErrTrain[i]=mean(modtrain!=ytrain)
+  modtest=knn(xtrain,xtest,k=k,cl=ytrain)
+  ErrTest[i]=mean(modtest!=ytest)
+  print(k)
+}
+stopCluster(cl)
+#On a pas pu aller plus loin que 500 itérations
+ErrTrain=ErrTrain[1:498]
+ErrTest=ErrTest[1:498]
+K=K[1:498]
+plot(K,ErrTest,type="b",col="blue",xlab="nb de voisins",ylab="erreurs train et erreurs test",pch=20,
+     ylim=range(c(ErrTest,ErrTrain)))
+lines(K,ErrTrain,type="b",col="red",pch=20)
+
+legend("bottomright",lty=1,col=c("red","blue"),legend=c("train","test"))
+
+
+which.min(ErrTrain)
+which.min(ErrTest)  #k=1
+
+
+#Le modèle avec le moins d'erreur est le modèle k=1.
+#On a donc un cas d'underfitting (risque de biais). 
+#On voit que le modèle est peu performant avec une erreur de test de 0.36
+
+
