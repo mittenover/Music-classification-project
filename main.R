@@ -71,13 +71,10 @@ c(C[36,37],C[71,72],C[160,164])
 #Suppression des variables
 df=df[,-c(37,72,160)]
 
-####Cas des variables mntionnées
+####Cas des variables mentionnées
+#Ces variables représentent d'après l'énoncé des moyennes, elles n'apportent donc rien au modèle on peut les supprimer
 
-par(mfcol=c(2,1))
-myplot(df$PAR_ASE_M,df$GENRE) #Idem
-myplot(df$PAR_ASE_MV,df$GENRE) #Pas de relation importante
-myplot(df$PAR_SFM_M,df$GENRE)
-myplot(df$PAR_SFM_MV,df$GENRE) #Ne semble pas avoir une relation importante avec le genre
+df=df[,-c(37,71,100,125)]
 
 dev.off()
 ####Définition du modèle logistique
@@ -102,7 +99,7 @@ train=sample(c(TRUE,FALSE),n,rep=TRUE,prob=c(2/3,1/3))
 
 ####Modele0####
 ###############
-formule0<-GENRE~PAR_TC + PAR_SC + PAR_SC_V + PAR_ASE_M + PAR_ASE_MV + PAR_SFM_M + PAR_SFM_MV
+formule0<-GENRE~PAR_TC + PAR_SC + PAR_SC_V 
 Mod0<-model(formule0,data=df[train==TRUE,])
 
 ####ModeleT####
@@ -115,32 +112,31 @@ ModT<-model(formuleT,data=df[train==TRUE,])
 
 ####Récupérations des variables significatives
 library(stats)
-ind_variables_nonsign=which(summary(ModT)$coefficients[,4]>=0.05)
-names(df)[ind_variables_nonsign]
+ind_variables_sign=which(summary(ModT)$coefficients[,4]<=0.05)
+names(df)[ind_variables_sign]
 
 ####Mis à jour du modèle en supprimant les variables significatives
-formule1<-GENRE~.-PAR_TC-PAR_SC-PAR_SC_V-PAR_ASE1-PAR_ASS_V-PAR_SFMV2-PAR_SFMV3-PAR_SFMV4-PAR_SFMV5-PAR_SFMV6-PAR_SFMV7-PAR_SFMV8-PAR_SFMV9-PAR_SFMV10-
-  PAR_SFMV11-PAR_SFMV12-PAR_SFMV13-PAR_SFMV14-PAR_SFMV15-PAR_SFMV16-PAR_SFMV17-PAR_SFMV18-PAR_SFMV19-PAR_SFMV20-PAR_SFMV21-PAR_SFMV22-PAR_SFMV23-PAR_SFMV24-
-  PAR_SFM_MV-PAR_MFCC1-PAR_MFCC2-PAR_MFCC3-PAR_MFCC6-PAR_MFCC7-PAR_MFCC8-PAR_MFCC12-PAR_MFCC14-PAR_MFCC15-PAR_MFCC16-PAR_MFCC17-PAR_MFCC18-PAR_THR_3RMS_TOT-
-  PAR_THR_1RMS_10FR_MEAN-PAR_THR_1RMS_10FR_VAR-PAR_THR_2RMS_10FR_MEAN-PAR_PEAK_RMS_TOT-PAR_PEAK_RMS10FR_MEAN-PAR_PEAK_RMS10FR_VAR-PAR_1RMS_TCD-PAR_2RMS_TCD-
-  PAR_3RMS_TCD-PAR_ZCD_10FR_MEAN-PAR_ZCD_10FR_VAR-PAR_1RMS_TCD_10FR_MEAN-PAR_1RMS_TCD_10FR_VAR-PAR_2RMS_TCD_10FR_MEAN-PAR_2RMS_TCD_10FR_VAR-PAR_3RMS_TCD_10FR_MEAN-
-  PAR_3RMS_TCD_10FR_VAR
+formule1<-GENRE~PAR_TC+PAR_SC_V+PAR_ASE2+PAR_ASE3+PAR_ASE5+PAR_ASE13+PAR_ASE16+PAR_ASE17+PAR_ASE21+PAR_ASE22+PAR_ASE23+PAR_ASE25+PAR_ASE29+PAR_ASE31+PAR_ASE32+
+  PAR_ASEV11+PAR_ASEV24+PAR_ASEV25+PAR_ASEV26+PAR_ASEV29+PAR_ASEV31+PAR_ASC+PAR_ASC_V+PAR_ASS+PAR_SFM1+PAR_SFM4+PAR_SFM7+PAR_SFM8+PAR_SFM10+PAR_SFM11+PAR_SFM12+PAR_SFM15+
+  PAR_SFM17+PAR_SFM19+PAR_SFM20+PAR_SFM23+PAR_SFMV1+PAR_SFMV5+PAR_SFMV7+PAR_SFMV10+PAR_SFMV11+PAR_SFMV13+PAR_SFMV16+PAR_SFMV17+PAR_SFMV19+PAR_SFMV20+PAR_SFMV21+PAR_SFMV24+
+  PAR_MFCC1+PAR_MFCC2+PAR_MFCC3+PAR_MFCC4+PAR_MFCC5+PAR_MFCC7+PAR_MFCC9+PAR_MFCC10+PAR_MFCC11+PAR_MFCC13+PAR_MFCC20+PAR_THR_1RMS_TOT+PAR_THR_2RMS_TOT+PAR_THR_2RMS_10FR_VAR+
+  PAR_THR_3RMS_10FR_MEAN+PAR_THR_3RMS_10FR_VAR+PAR_PEAK_RMS10FR_VAR 
 Mod1=model(formule1,data=df[train==TRUE,])
-
+  
 ####Modele2####
 ###############
 
 ####Récupérations des variables significatives
-ind_variables_nonsign=which(summary(ModT)$coefficients[,4]>=0.2)
-nom_variables_nonsign=names(df)[ind_variables_nonsign]
+ind_variables_sign=which(summary(ModT)$coefficients[,4]<=0.2)
+names(df)[ind_variables_sign]
 
 ####Mis à jour du modèle en supprimant les variables significatives
-formule2<-GENRE~.-PAR_SC-PAR_SC_V-PAR_ASE1-PAR_ASS_V-PAR_SFMV2-PAR_SFMV3-PAR_SFMV4-PAR_SFMV5-PAR_SFMV6-PAR_SFMV7-PAR_SFMV8-PAR_SFMV9-PAR_SFMV10-
-  PAR_SFMV11-PAR_SFMV12-PAR_SFMV13-PAR_SFMV14-PAR_SFMV15-PAR_SFMV16-PAR_SFMV17-PAR_SFMV18-PAR_SFMV19-PAR_SFMV20-PAR_SFMV21-PAR_SFMV22-PAR_SFMV23-PAR_SFMV24-
-  PAR_SFM_MV-PAR_MFCC1-PAR_MFCC6-PAR_MFCC8-PAR_MFCC15-PAR_MFCC16-PAR_MFCC17-
-  PAR_THR_1RMS_10FR_MEAN-PAR_THR_2RMS_10FR_MEAN-PAR_PEAK_RMS_TOT-PAR_PEAK_RMS10FR_VAR-PAR_1RMS_TCD-
-  PAR_ZCD_10FR_MEAN-PAR_ZCD_10FR_VAR-PAR_1RMS_TCD_10FR_MEAN-PAR_2RMS_TCD_10FR_MEAN-PAR_3RMS_TCD_10FR_MEAN-
-  PAR_3RMS_TCD_10FR_VAR
+formule2<-GENRE~PAR_TC+PAR_SC_V+PAR_ASE2+PAR_ASE3+PAR_ASE4+PAR_ASE5+PAR_ASE6+PAR_ASE8+PAR_ASE13+PAR_ASE16+PAR_ASE17+PAR_ASE18+PAR_ASE19+PAR_ASE21+PAR_ASE22+PAR_ASE23+PAR_ASE24+
+  PAR_ASE25+PAR_ASE28+PAR_ASE29+PAR_ASE31+PAR_ASE32+PAR_ASEV2+PAR_ASEV7+PAR_ASEV8+PAR_ASEV9+PAR_ASEV10+PAR_ASEV11+PAR_ASEV14+PAR_ASEV19+PAR_ASEV21+PAR_ASEV22+PAR_ASEV24+
+  PAR_ASEV25+PAR_ASEV26+PAR_ASEV29+PAR_ASEV30+PAR_ASEV31+PAR_ASC+PAR_ASC_V+PAR_ASS+PAR_SFM1+PAR_SFM3+PAR_SFM4+PAR_SFM6+PAR_SFM7+PAR_SFM8+PAR_SFM9+PAR_SFM10+PAR_SFM11+PAR_SFM12+
+  PAR_SFM15+PAR_SFM17+PAR_SFM19+PAR_SFM20+PAR_SFM23+PAR_SFMV1+PAR_SFMV5+PAR_SFMV7+PAR_SFMV10+PAR_SFMV11+PAR_SFMV13+PAR_SFMV16+PAR_SFMV17+PAR_SFMV18+PAR_SFMV19+PAR_SFMV20+PAR_SFMV21+
+  PAR_SFMV22+PAR_SFMV24+PAR_MFCC1+PAR_MFCC2+PAR_MFCC3+PAR_MFCC4+PAR_MFCC5+PAR_MFCC7+PAR_MFCC9+PAR_MFCC10+PAR_MFCC11+PAR_MFCC12+PAR_MFCC13+PAR_MFCC17+PAR_MFCC19+PAR_MFCC20+PAR_THR_1RMS_TOT+
+  PAR_THR_2RMS_TOT+PAR_THR_3RMS_TOT+PAR_THR_1RMS_10FR_VAR+PAR_THR_2RMS_10FR_VAR+PAR_THR_3RMS_10FR_MEAN+PAR_THR_3RMS_10FR_VAR+PAR_PEAK_RMS10FR_VAR 
 Mod2=model(formule2,data=df[train==TRUE,])
 
 ####ModAIC####
@@ -156,19 +152,29 @@ library(pROC)
 
 ####Premier graph
 #Echantillon apprentissage
-pred=predict(ModT)
-ROC_T_train=roc(df$GENRE[train==TRUE],pred)
-plot(ROC_T_train, xlab="", col="blue",main="courbes ROC")
+pred1=predict(ModT)
+ROC_T_train=roc(df$GENRE[train==TRUE],pred1)
+plot(ROC_T_train, xlab="", col="blue",main="courbes ROC : ModT apprentissage")
+segments(x0=1,y0=0,x1=1,y1=1,col="red")
+segments(x0=1,y0=1,x1=0,y1=1,col="red")
+legend(0.6,0.2,legend=c("ModT : Apprentissage","Règle aléatoire","Règle parfaite"),col=c("blue","grey","red"),lty=1)
 
 #Echantillon test
-pred=predict(ModT,newdata=df[train==FALSE,])
-ROC_T_test=roc(df$GENRE[train==FALSE],pred)
-lines(ROC_T_test, xlab="", col="red",main="courbes ROC")
+pred2=predict(ModT,newdata=df[train==FALSE,])
+ROC_T_test=roc(df$GENRE[train==FALSE],pred2)
+plot(ROC_T_test, xlab="", col="purple",main="courbes ROC : Test")
+segments(x0=1,y0=0,x1=1,y1=1,col="red")
+segments(x0=1,y0=1,x1=0,y1=1,col="red")
+legend(0.6,0.2,legend=c("ModT : Test","Règle aléatoire","Règle parfaite"),col=c("purple","grey","red"),lty=1)
 
-legend(0.4,0.2,legend=c("Apprentissage","Test"),col=c("blue","red"),lty=1)
-#Règle parfaite
-#lines(0:length(ROC_T_test)/1:length(ROC_T_test)) à voir comment faire
+#Superposition apprentissage / test
+plot(ROC_T_train, xlab="", col="blue",main="courbes ROC : ModT")
+lines(ROC_T_test, xlab="", col="purple",)
+segments(x0=1,y0=0,x1=1,y1=1,col="red")
+segments(x0=1,y0=1,x1=0,y1=1,col="red")
+legend(0.6,0.3,legend=c("ModT : Apprentissage","ModT : Test","Règle aléatoire","Règle parfaite"),col=c("blue","purple","grey","red"),lty=1)
 
+#Superpositions autres modèles
 pred=predict(ModT,newdata=df[train==FALSE,])
 ROC_T_test=roc(df$GENRE[train==FALSE],pred)
 plot(ROC_T_test, xlab="", col=1,main="Superposition courbes ROC")
@@ -181,7 +187,11 @@ pred=predict(Mod2,newdata=df[train==FALSE,])
 ROC_2_test=roc(df$GENRE[train==FALSE],pred)
 lines(ROC_2_test, xlab="", col=3,main="Superposition courbes ROC")
 
-legend(0.6,0.2,legend=c(paste("ModT :",toString(auc(ROC_T_test))),paste("Mod1 :",toString(auc(ROC_1_test))),paste("Mod2 :",toString(auc(ROC_2_test)))), col=c(1:3),lty=1)
+pred=predict(Mod0,newdata=df[train==FALSE,])
+ROC_0_test=roc(df$GENRE[train==FALSE],pred)
+lines(ROC_0_test, xlab="", col=4,main="Superposition courbes ROC")
+
+legend(0.8,0.3,legend=c(paste("ModT :",toString(auc(ROC_T_test))),paste("Mod1 :",toString(auc(ROC_1_test))),paste("Mod2 :",toString(auc(ROC_2_test))),paste("Mod0 :",toString(auc(ROC_1_test)))), col=c(1:4),lty=1)
 
 
 ################
@@ -195,19 +205,24 @@ error_classif=function(data,modele,seuil=0.5)
 }
 ##ModT
 #Apprentissage
-error_classif(df[train==TRUE,],ModT,0.5) #0.06849315
+error_classif(df[train==TRUE,],ModT,0.5) #0.07305936
 #Test
-error_classif(df[train==FALSE,],ModT,0.5) #0.09154437
+error_classif(df[train==FALSE,],ModT,0.5) #0.09783368
+##Mod0
+#Apprentissage
+error_classif(df[train==TRUE,],Mod0,0.5) #0.3463295
+#Test
+error_classif(df[train==FALSE,],Mod0,0.5) #0.3584906
 ##Mod1
 #Apprentissage
-error_classif(df[train==TRUE,],Mod1,0.5) #0.913242
+error_classif(df[train==TRUE,],Mod1,0.5) #0.1306639
 #Test
-error_classif(df[train==FALSE,],Mod1,0.5) #0.1104123
+error_classif(df[train==FALSE,],Mod1,0.5) #0.1439553
 ##Mod2
 #Apprentissage
-error_classif(df[train==TRUE,],Mod2,0.5) #0.08851423
+error_classif(df[train==TRUE,],Mod2,0.5) #0.1060766
 #Test
-error_classif(df[train==FALSE,],Mod2,0.5) #0.1062194
+error_classif(df[train==FALSE,],Mod2,0.5) #0.1306778
 
 ##ModAIC
 #Apprentissage
