@@ -15,3 +15,4 @@ On utilise ici la régression ridge.
 
 On utilise enfin la méthode des K- plus proches voisins.
 
+huhrre
