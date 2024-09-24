@@ -1,17 +1,15 @@
-# Projet final de STA203
+# Final Project for STA203
 
-Ce projet s'inscrit dans le cadre de la deuxième partie du cours STA203 à ENSTA Paris. Il porte sur l'apprentissage supervisé.
-L'objectif est de mettre en compétition plusieurs méthodes de classification appliquées à un jeu de données *Music_2023.txt* qui contient des morceaux de jazz et de musique classique.
+This project is part of the second segment of the *STA203 : Statistical learning* course at **ENSTA Paris**. It focuses on **supervised learning**. The objective is to compare several classification methods applied to the dataset **Music_2023.txt**, which contains jazz and classical music pieces.
 
-## Partie I
+## Part I
 
-Dans cette partie on commence par effectuer une régression logistique.
+In this part, we begin by performing **logistic regression**.
 
-## Partie II
+## Part II
 
-On utilise ici la régression ridge.
+In this section, we utilize **ridge regression**.
 
-## Partie III
+## Part III
 
-On utilise enfin la méthode des K- plus proches voisins.
-
+Finally, we apply the **K-nearest neighbors** method.
